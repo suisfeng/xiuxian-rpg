@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>修仙放置RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Toast通知 -->
+    <div id="toast-container"></div>
+
+    <!-- 岛屿选择界面 -->
+    <div id="island-select" class="screen active">
+        <div class="island-header">
+            <div class="header-tabs">
+                <span class="tab">宗门试炼</span>
+                <span class="tab">公告</span>
+                <span class="tab">新手引导</span>
+                <span class="tab" id="btn-settings-island">设置</span>
+            </div>
+        </div>
+        <div class="island-cards" id="island-cards"></div>
+        <div class="island-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+        <div class="island-footer">
+            <div class="footer-btn">好友</div>
+            <div class="footer-btn">聊天</div>
+            <div class="footer-btn">加群</div>
+        </div>
+    </div>
+
+    <!-- 加载界面 -->
+    <div id="loading-screen" class="screen">
+        <div class="loading-bg"></div>
+        <div class="loading-bar">
+            <div class="loading-fill"></div>
+            <span class="loading-text">加载中...</span>
+        </div>
+    </div>
+
+    <!-- 战斗界面 -->
+    <div id="battle-screen" class="screen">
+        <div class="battle-top">
+            <div class="player-panel">
+                <div class="player-avatar"><div class="avatar-img"></div></div>
+                <div class="player-info">
+                    <div class="player-name" id="player-name">修仙者</div>
+                    <div class="player-realm" id="player-realm">练气期</div>
+                    <div class="hp-bar-wrap">
+                        <div class="hp-bar"><div class="hp-fill" id="hp-fill"></div></div>
+                        <span class="hp-text" id="hp-text">336/336</span>
+                    </div>
+                    <div class="player-stats">
+                        <div class="stat-row"><span>等级:</span><span id="stat-level">1</span></div>
+                        <div class="stat-row"><span>攻击:</span><span id="stat-atk">10</span></div>
+                        <div class="stat-row"><span>防御:</span><span id="stat-def">5</span></div>
+                        <div class="stat-row"><span>回复:</span><span id="stat-rec">3</span></div>
+                        <div class="stat-row"><span>攻速:</span><span id="stat-spd">100%</span></div>
+                        <div class="stat-row"><span>回避:</span><span id="stat-eva">5%</span></div>
+                        <div class="stat-row"><span>生命:</span><span id="stat-hp">336</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="system-panel">
+                <div class="sys-row"><span>每攻击<span id="atk-interval">40</span>次</span><span id="atk-counter">0/40</span></div>
+                <div class="sys-row"><span>每回复20次</span><span id="rec-counter">0/20</span></div>
+                <div class="sys-row"><span>每20秒</span><span id="time-counter">0/20</span></div>
+                <div class="evolve-bar">
+                    <span id="evolve-text">1/10级可进化</span>
+                    <div class="evolve-progress"><div class="evolve-fill" id="evolve-fill"></div></div>
+                </div>
+                <div class="gold-bar"><span>💰 <span id="gold-text">0</span></span></div>
+                <div class="diamond-bar"><span>💎 <span id="diamond-text">0</span></span></div>
+            </div>
+        </div>
+
+        <div class="battle-area" id="battle-area">
+            <!-- 地图装饰层 -->
+            <div class="map-bg" id="map-bg">
+                <div class="map-grass"></div>
+                <div class="map-path"></div>
+                <div class="map-water" id="map-water"></div>
+                <div class="map-decor" id="map-decor"></div>
+            </div>
+            <div class="zone-indicator" id="zone-indicator">
+                <span class="zone-name" id="zone-name">灵草地</span>
+                <span class="zone-level" id="zone-level">Lv.1</span>
+            </div>
+            <div class="battle-ground"></div>
+            <!-- 攻击范围圈 -->
+            <div class="range-circles" id="range-circles">
+                <div class="range-circle range-melee"></div>
+                <div class="range-circle range-ranged"></div>
+            </div>
+            <!-- 宝可梦风格角色 -->
+            <div class="player-char" id="player-char">
+                <div class="char-body">
+                    <div class="char-ear char-ear-l"></div>
+                    <div class="char-ear char-ear-r"></div>
+                    <div class="char-head">
+                        <div class="char-eye char-eye-l"></div>
+                        <div class="char-eye char-eye-r"></div>
+                        <div class="char-mouth"></div>
+                        <div class="char-cheek char-cheek-l"></div>
+                        <div class="char-cheek char-cheek-r"></div>
+                        <div class="char-gem"></div>
+                    </div>
+                    <div class="char-torso">
+                        <div class="char-belly"></div>
+                    </div>
+                    <div class="char-arm char-arm-l"></div>
+                    <div class="char-arm char-arm-r"></div>
+                    <div class="char-leg char-leg-l"></div>
+                    <div class="char-leg char-leg-r"></div>
+                    <div class="char-tail"></div>
+                    <div class="char-aura" id="char-aura"></div>
+                </div>
+                <div class="char-shadow"></div>
+            </div>
+            <div id="monster-container"></div>
+            <div id="float-text-container"></div>
+            <div id="projectile-container"></div>
+            <div id="particle-container"></div>
+            <div id="slash-container"></div>
+            <div class="fire-overlay" id="fire-overlay"></div>
+            <!-- 虚拟摇杆 -->
+            <div class="joystick" id="joystick">
+                <div class="joystick-base">
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+            </div>
+            <div class="move-hint" id="move-hint">WASD / 方向键移动</div>
+            <button class="fullscreen-btn" id="btn-fullscreen" title="全屏地图">⛶</button>
+            <!-- 小地图 -->
+            <div id="minimap"></div>
+        </div>
+
+        <div class="battle-bottom">
+            <div class="action-bar">
+                <div class="action-btn" id="btn-gacha"><div class="btn-icon">?</div><span>抽卡</span></div>
+                <div class="action-btn" id="btn-character"><div class="btn-icon">👤</div><span>角色</span></div>
+                <div class="action-btn" id="btn-talent"><div class="btn-icon star">★</div><span>天赋</span></div>
+                <div class="action-btn" id="btn-skill"><div class="btn-icon">⚔</div><span>技能</span></div>
+                <div class="action-btn" id="btn-pet"><div class="btn-icon">🐾</div><span>精灵</span></div>
+                <div class="action-btn" id="btn-break"><div class="btn-icon">✦</div><span>突破</span></div>
+                <div class="action-btn" id="btn-shop"><div class="btn-icon">🏠</div><span>商城</span></div>
+            </div>
+            <div class="combat-controls">
+                <div class="auto-attack-wrap">
+                    <label class="toggle">
+                        <input type="checkbox" id="auto-attack" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span>自动攻击</span>
+                </div>
+                <div class="potion-btn" id="btn-potion" title="使用药水恢复40%生命">
+                    <span class="potion-icon">🧪</span>
+                    <span class="potion-count" id="potion-count">3</span>
+                </div>
+                <div class="skill-buttons">
+                    <button class="skill-btn" id="btn-skill-1" data-skill="0">
+                        <div class="skill-icon fire">🔥</div>
+                        <span class="skill-cd" id="skill-cd-0">0.0</span>
+                    </button>
+                    <button class="skill-btn locked" id="btn-skill-2" data-skill="1">
+                        <div class="skill-icon ice">❄</div>
+                        <span class="skill-cd" id="skill-cd-1">🔒</span>
+                    </button>
+                    <button class="skill-btn locked" id="btn-skill-3" data-skill="2">
+                        <div class="skill-icon heal">💚</div>
+                        <span class="skill-cd" id="skill-cd-2">🔒</span>
+                    </button>
+                    <button class="skill-btn locked" id="btn-skill-4" data-skill="3">
+                        <div class="skill-icon thunder">⚡</div>
+                        <span class="skill-cd" id="skill-cd-3">🔒</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="timer-bar">
+            <span>剩余时间: <span id="remain-time">12000</span></span>
+            <span class="kill-count">击杀: <span id="kill-count">0</span></span>
+        </div>
+    </div>
+
+    <!-- 卡牌选择弹窗 -->
+    <div id="card-select-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="card-select-content">
+            <h2 class="card-select-title">选择一个卡片</h2>
+            <div class="card-options" id="card-options"></div>
+            <div class="card-actions">
+                <button class="auto-select-btn" id="btn-auto-select">✓ 自动连选</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 进化弹窗 -->
+    <div id="evolve-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="evolve-content">
+            <h2 id="evolve-title">进化成功！</h2>
+            <div class="evolve-effect"></div>
+            <p id="evolve-desc"></p>
+            <button class="confirm-btn" id="btn-evolve-ok">确定</button>
+        </div>
+    </div>
+
+    <!-- 精灵系统弹窗 -->
+    <div id="pet-modal" class="modal">
+        <div class="modal-overlay" data-close="pet-modal"></div>
+        <div class="pet-content">
+            <div class="modal-header">
+                <h2>精灵图鉴</h2>
+                <span class="pet-points">精灵积分: <span id="pet-points">0</span></span>
+                <button class="modal-close" data-close="pet-modal">✕</button>
+            </div>
+            <div class="pet-grid" id="pet-grid"></div>
+        </div>
+    </div>
+
+    <!-- 核心卡弹窗 -->
+    <div id="corecard-modal" class="modal">
+        <div class="modal-overlay" data-close="corecard-modal"></div>
+        <div class="corecard-content">
+            <div class="modal-header">
+                <h2>核心卡</h2>
+                <button class="modal-close" data-close="corecard-modal">✕</button>
+            </div>
+            <div class="corecard-grid" id="corecard-grid"></div>
+        </div>
+    </div>
+
+    <!-- 抽卡弹窗 -->
+    <div id="gacha-modal" class="modal">
+        <div class="modal-overlay" data-close="gacha-modal"></div>
+        <div class="gacha-content">
+            <div class="modal-header">
+                <h2>命运抽卡</h2>
+                <span>💰 <span id="gacha-gold">0</span></span>
+                <button class="modal-close" data-close="gacha-modal">✕</button>
+            </div>
+            <div class="gacha-display" id="gacha-display">
+                <div class="gacha-pack">
+                    <div class="pack-glow"></div>
+                    <div class="pack-card">?</div>
+                </div>
+            </div>
+            <div class="gacha-buttons">
+                <button class="gacha-btn single" id="btn-gacha-1">单抽 ×1<br><small>100金币</small></button>
+                <button class="gacha-btn multi" id="btn-gacha-10">十连抽<br><small>900金币</small></button>
+            </div>
+            <div class="gacha-pity">保底: <span id="gacha-pity">0</span>/30</div>
+            <div class="gacha-results" id="gacha-results"></div>
+        </div>
+    </div>
+
+    <!-- 商城弹窗 -->
+    <div id="shop-modal" class="modal">
+        <div class="modal-overlay" data-close="shop-modal"></div>
+        <div class="shop-content">
+            <div class="modal-header">
+                <h2>商城</h2>
+                <span>💎 <span id="shop-diamonds">0</span></span>
+                <button class="modal-close" data-close="shop-modal">✕</button>
+            </div>
+            <div class="shop-cards" id="shop-cards">
+                <div class="shop-card" id="shop-daily">
+                    <div class="shop-card-header daily">每日福利</div>
+                    <div class="shop-card-icon">🍀</div>
+                    <div class="shop-card-desc">每日免费领取20体力</div>
+                    <button class="shop-btn claim" id="btn-daily-claim">领取</button>
+                </div>
+                <div class="shop-card" id="shop-monthly">
+                    <div class="shop-card-header monthly">月卡</div>
+                    <div class="shop-badge">5000%回馈</div>
+                    <div class="shop-card-icon">🌙</div>
+                    <ul class="shop-card-benefits">
+                        <li>·经验获取+30%</li>
+                        <li>·3选1可刷新1次</li>
+                        <li>·寿命+2400秒</li>
+                    </ul>
+                    <button class="shop-btn buy" id="btn-buy-monthly">💎 300</button>
+                </div>
+                <div class="shop-card" id="shop-lifetime">
+                    <div class="shop-card-header lifetime">终身卡</div>
+                    <div class="shop-badge ultra">70000%回馈</div>
+                    <div class="shop-card-icon">☀️</div>
+                    <ul class="shop-card-benefits">
+                        <li>·金币获取+30%</li>
+                        <li>·金币3选1可刷新</li>
+                        <li>·寿命+2400秒</li>
+                    </ul>
+                    <button class="shop-btn buy" id="btn-buy-lifetime">💎 980</button>
+                </div>
+            </div>
+            <div class="shop-combo" id="shop-combo">
+                <span>异界行者</span>
+                <small>激活月卡+终身卡获得专属称号，攻击+1000</small>
+                <span class="combo-status" id="combo-status">未激活</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 天赋弹窗 -->
+    <div id="talent-modal" class="modal">
+        <div class="modal-overlay" data-close="talent-modal"></div>
+        <div class="talent-content">
+            <div class="modal-header">
+                <h2>天赋树</h2>
+                <span>天赋点: <span id="talent-points">0</span></span>
+                <button class="modal-close" data-close="talent-modal">✕</button>
+            </div>
+            <div class="talent-tabs">
+                <button class="talent-tab active" data-branch="attack">攻击</button>
+                <button class="talent-tab" data-branch="defense">防御</button>
+                <button class="talent-tab" data-branch="support">辅助</button>
+            </div>
+            <div class="talent-tree" id="talent-tree"></div>
+        </div>
+    </div>
+
+    <!-- 技能弹窗 -->
+    <div id="skill-modal" class="modal">
+        <div class="modal-overlay" data-close="skill-modal"></div>
+        <div class="skill-content">
+            <div class="modal-header">
+                <h2>技能列表</h2>
+                <button class="modal-close" data-close="skill-modal">✕</button>
+            </div>
+            <div class="skill-list" id="skill-list"></div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-overlay" data-close="settings-modal"></div>
+        <div class="settings-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="modal-close" data-close="settings-modal">✕</button>
+            </div>
+            <div class="settings-list">
+                <div class="settings-row">
+                    <span>自动存档</span>
+                    <span class="settings-val" id="autosave-status">每30秒</span>
+                </div>
+                <div class="settings-row">
+                    <button class="settings-btn" id="btn-save">手动存档</button>
+                    <button class="settings-btn" id="btn-load">读取存档</button>
+                </div>
+                <div class="settings-row">
+                    <button class="settings-btn danger" id="btn-reset">重置游戏</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色详情弹窗 -->
+    <div id="character-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="character-content">
+            <div class="modal-header">
+                <h2>角色详情</h2>
+                <button class="modal-close" id="char-detail-close">✕</button>
+            </div>
+            <div class="char-detail-body">
+                <div class="char-detail-left">
+                    <div class="char-detail-avatar">
+                        <div class="char-detail-char">
+                            <div class="char-head" style="width:36px;height:32px;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,#60a5fa,#3b82f6);margin:0 auto;position:relative;">
+                                <div style="position:absolute;top:6px;left:5px;width:8px;height:10px;background:#fff;border-radius:50%;box-shadow:inset 0 0 0 2px #333;"></div>
+                                <div style="position:absolute;top:6px;right:5px;width:8px;height:10px;background:#fff;border-radius:50%;box-shadow:inset 0 0 0 2px #333;"></div>
+                                <div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:2px;border-bottom:2px solid #333;border-radius:0 0 50% 50%;"></div>
+                                <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f0abfc,#a855f7);box-shadow:0 0 4px #c084fc;"></div>
+                            </div>
+                            <div style="width:30px;height:20px;border-radius:40% 40% 50% 50%;background:linear-gradient(180deg,#3b82f6,#2563eb);margin:0 auto;"></div>
+                        </div>
+                    </div>
+                    <div class="char-detail-basic">
+                        <div class="cd-name" id="char-detail-name">修仙者</div>
+                        <div class="cd-realm" id="char-detail-realm">练气期</div>
+                        <div class="cd-level" id="char-detail-level">等级 1</div>
+                        <div class="cd-evolve" id="char-detail-evolve">练气期 (0转)</div>
+                    </div>
+                </div>
+                <div class="char-detail-stats">
+                    <div class="cd-stat-row"><span>❤️ 生命</span><span id="char-detail-hp">336 / 336</span></div>
+                    <div class="cd-stat-row"><span>⚔️ 攻击</span><span id="char-detail-atk">10 (基础 10)</span></div>
+                    <div class="cd-stat-row"><span>🛡️ 防御</span><span id="char-detail-def">5 (基础 5)</span></div>
+                    <div class="cd-stat-row"><span>💚 回复</span><span id="char-detail-rec">3</span></div>
+                    <div class="cd-stat-row"><span>⚡ 攻速</span><span id="char-detail-spd">100%</span></div>
+                    <div class="cd-stat-row"><span>💨 回避</span><span id="char-detail-eva">5%</span></div>
+                    <div class="cd-stat-row"><span>💰 金币</span><span id="char-detail-gold">0</span></div>
+                    <div class="cd-stat-row"><span>💎 钻石</span><span id="char-detail-diamonds">50</span></div>
+                    <div class="cd-stat-row"><span>💀 击杀数</span><span id="char-detail-kills">0</span></div>
+                </div>
+                <div class="char-detail-equip-section">
+                    <div class="cd-equip-title">装备</div>
+                    <div id="char-detail-equipment"></div>
+                </div>
+                <button class="cd-close-btn" id="btn-char-detail">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+    <script src="js/pet.js"></script>
+    <script src="js/corecard.js"></script>
+    <script src="js/gacha.js"></script>
+    <script src="js/shop.js"></script>
+    <script src="js/talent.js"></script>
+</body>
+</html>
